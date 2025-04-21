@@ -31,7 +31,8 @@ function url(options = {}) {
         return null;
       }
       return Promise.all([fsStatPromise(id), fsReadFilePromise(id)]).then(([stats, buffer]) => {
-        let data;
+        let data;   
+        
         if ((limit && stats.size > limit) || limit === 0) {
           const hash = crypto.createHash('sha1').update(buffer).digest('hex').substr(0, 16);
           const ext = path.extname(id);
@@ -61,7 +62,7 @@ function url(options = {}) {
           const encoding = isSVG ? '' : ';base64';
           data = `data:${mimetype}${encoding},${data}`;
         }
-        return `export default ${data}`;
+        return `export default "${data}"`;
       });
     },
     generateBundle: async function write(outputOptions) {
