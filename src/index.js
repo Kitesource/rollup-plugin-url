@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import path from 'path';
 import util from 'util';
 import fs from 'fs';
+
 import makeDir from 'make-dir';
 import mime from 'mime';
 import { createFilter } from '@rollup/pluginutils';
@@ -11,7 +12,7 @@ const fsReadFilePromise = util.promisify(fs.readFile);
 const { posix, sep } = path;
 const defaultInclude = ['**/*.svg', '**/*.png', '**/*.jp(e)?g', '**/*.gif', '**/*.webp'];
 
-function url(options = {}) {
+export default function url(options = {}) {
   const {
     limit = 14 * 1024,
     include = defaultInclude,
@@ -31,8 +32,7 @@ function url(options = {}) {
         return null;
       }
       return Promise.all([fsStatPromise(id), fsReadFilePromise(id)]).then(([stats, buffer]) => {
-        let data;   
-        
+        let data;
         if ((limit && stats.size > limit) || limit === 0) {
           const hash = crypto.createHash('sha1').update(buffer).digest('hex').substr(0, 16);
           const ext = path.extname(id);
@@ -55,13 +55,15 @@ function url(options = {}) {
           // Windows fix - exports must be in unix format
           data = `require("${publicPath}${outputFileName.split(sep).join(posix.sep)}")`;
           copies[id] = outputFileName;
-        } else {
-          const mimetype = mime.getType(id);
-          const isSVG = mimetype === 'image/svg+xml';
-          data = isSVG ? encodeSVG(buffer) : buffer.toString('base64');
-          const encoding = isSVG ? '' : ';base64';
-          data = `data:${mimetype}${encoding},${data}`;
+          return `export default ${data}`;
         }
+
+        // 小于limit的图片，转成base64
+        const mimetype = mime.getType(id);
+        const isSVG = mimetype === 'image/svg+xml';
+        data = isSVG ? encodeSVG(buffer) : buffer.toString('base64');
+        const encoding = isSVG ? '' : ';base64';
+        data = `data:${mimetype}${encoding},${data}`;
         return `export default "${data}"`;
       });
     },
@@ -117,6 +119,3 @@ function encodeSVG(buffer) {
       .replace(/\)/g, '%29')
   );
 }
-
-export { url as default };
-//# sourceMappingURL=index.es.js.map

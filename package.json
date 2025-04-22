@@ -1,6 +1,6 @@
 {
-  "name": "@smilekite/plugin-url",
-  "version": "7.0.1",
+  "name": "rollup-plugin-url",
+  "version": "7.0.3",
   "publishConfig": {
     "access": "public"
   },
